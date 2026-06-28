@@ -103,6 +103,18 @@ or, simply copy and pasta.
 
 ## Notes & tradeoffs
 
+- **Other TUIs that use `Ctrl+h/j/k/l`** ([vi-sql](https://github.com/kopecmaciej/vi-sql),
+  `lazygit`, `k9s`). By default every non-Vim pane just moves herdr focus. To let
+  one of these handle the chord itself, name it in `HERDR_NAV_PASSTHROUGH_RE` — a
+  regex on the lower-cased process name, anchored (`^…$`) for an exact match. Set
+  it where you launch herdr:
+
+  ```bash
+  export HERDR_NAV_PASSTHROUGH_RE='^(vi-sql|lazygit)$'
+  ```
+
+  Unlike Vim, these apps don't cross _out_ at an edge — use `prefix+h/j/k/l` to
+  leave the pane.
 - **`Ctrl+l` / `Ctrl+k` in shells.** Binding these globally shadows readline's
   `Ctrl+L` (clear screen) and `Ctrl+K` (kill line) inside non-Vim panes. This is
   the same tradeoff as `vim-tmux-navigator`. If you want them back, bind clear to

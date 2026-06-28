@@ -6,8 +6,10 @@
 #
 # If the focused pane is running Vim/Neovim in the foreground, hand the matching
 # Ctrl chord to that pane so Vim moves between its own splits (and, at a split
-# edge, calls back into herdr to cross the pane boundary — see editor/*). For any
-# other foreground process, move herdr's pane focus directly.
+# edge, calls back into herdr to cross the pane boundary — see editor/*). The same
+# forwarding can be turned on for other TUIs that own Ctrl+h/j/k/l themselves via
+# HERDR_NAV_PASSTHROUGH_RE (off by default — see below). For any other foreground
+# process, move herdr's pane focus directly.
 #
 # Requires `jq`. Without it, detection is skipped and every key just moves the
 # herdr pane focus (no Vim awareness).
@@ -30,18 +32,22 @@ esac
 # Same matcher vim-tmux-navigator uses: vi, vim, nvim, view, gvim, *diff, ...
 vim_re='^g?(view|l?n?vim?x?)(diff)?$'
 
-is_vim=0
+# Opt-in passthrough for non-Vim TUIs (see README): HERDR_NAV_PASSTHROUGH_RE is an
+# ERE matched against the lower-cased process name. Empty (default) forwards only Vim.
+passthrough_re="${HERDR_NAV_PASSTHROUGH_RE:-}"
+
+forward=0
 if [ -n "$pane" ] && command -v jq >/dev/null 2>&1; then
   if "$herdr" pane process-info --current 2>/dev/null \
-    | jq -e --arg re "$vim_re" \
+    | jq -e --arg vim "$vim_re" --arg pass "$passthrough_re" \
         '.result.process_info.foreground_processes[]?.name
          | ascii_downcase
-         | select(test($re))' >/dev/null 2>&1; then
-    is_vim=1
+         | select(test($vim) or ($pass != "" and (try test($pass) catch false)))' >/dev/null 2>&1; then
+    forward=1
   fi
 fi
 
-if [ "$is_vim" -eq 1 ]; then
+if [ "$forward" -eq 1 ]; then
   exec "$herdr" pane send-keys "$pane" "$key"
 else
   exec "$herdr" pane focus --direction "$dir" --current
