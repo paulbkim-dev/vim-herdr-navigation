@@ -23,7 +23,16 @@ local function nav(wincmd, dir)
     if herdr == nil or herdr == "" then
       herdr = "herdr"
     end
-    vim.fn.system({ herdr, "pane", "focus", "--direction", dir, "--current" })
+    local output = vim.fn.system({ herdr, "pane", "focus", "--direction", dir, "--current" })
+    if vim.v.shell_error ~= 0 then
+      vim.notify(
+        "vim-herdr-navigation: herdr pane focus failed (exit "
+          .. vim.v.shell_error
+          .. "): "
+          .. vim.trim(output),
+        vim.log.levels.WARN
+      )
+    end
   elseif vim.env.TMUX and vim.env.TMUX ~= "" then
     local tmux = { left = "Left", down = "Down", up = "Up", right = "Right" }
     pcall(vim.cmd, "TmuxNavigate" .. tmux[dir])

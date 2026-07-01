@@ -15,7 +15,12 @@ endif
 
 function! s:HerdrFocus(dir) abort
   let l:herdr = empty($HERDR_BIN_PATH) ? 'herdr' : $HERDR_BIN_PATH
-  call system(shellescape(l:herdr) . ' pane focus --direction ' . a:dir . ' --current')
+  let l:output = system(shellescape(l:herdr) . ' pane focus --direction ' . a:dir . ' --current')
+  if v:shell_error
+    echohl WarningMsg
+    echomsg 'vim-herdr-navigation: herdr pane focus failed (exit ' . v:shell_error . '): ' . substitute(l:output, '\n', ' ', 'g')
+    echohl None
+  endif
 endfunction
 
 function! s:Navigate(wincmd, dir) abort

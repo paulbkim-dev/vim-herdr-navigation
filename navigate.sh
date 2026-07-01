@@ -20,6 +20,12 @@ dir="${1:?usage: navigate.sh <left|down|up|right>}"
 herdr="${HERDR_BIN_PATH:-herdr}"
 pane="${HERDR_PANE_ID:-}"
 
+if ! command -v "$herdr" >/dev/null 2>&1; then
+  echo "navigate.sh: herdr not found: $herdr" >&2
+  echo "  Set HERDR_BIN_PATH or ensure herdr is on your PATH." >&2
+  exit 127
+fi
+
 case "$dir" in
   left)  key="ctrl+h" ;;
   down)  key="ctrl+j" ;;
@@ -38,12 +44,16 @@ passthrough_re="${HERDR_NAV_PASSTHROUGH_RE:-}"
 
 forward=0
 if [ -n "$pane" ] && command -v jq >/dev/null 2>&1; then
-  if "$herdr" pane process-info --current 2>/dev/null \
-    | jq -e --arg vim "$vim_re" --arg pass "$passthrough_re" \
-        '.result.process_info.foreground_processes[]?.name
-         | ascii_downcase
-         | select(test($vim) or ($pass != "" and (try test($pass) catch false)))' >/dev/null 2>&1; then
-    forward=1
+  if proc_info=$("$herdr" pane process-info --current 2>/dev/null); then
+    if printf '%s\n' "$proc_info" \
+      | jq -e --arg vim "$vim_re" --arg pass "$passthrough_re" \
+          '.result.process_info.foreground_processes[]?.name
+           | ascii_downcase
+           | select(test($vim) or ($pass != "" and (try test($pass) catch false)))' >/dev/null 2>&1; then
+      forward=1
+    fi
+  else
+    echo "navigate.sh: 'herdr pane process-info --current' failed; falling back to pane focus" >&2
   fi
 fi
 
