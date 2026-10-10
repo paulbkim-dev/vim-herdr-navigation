@@ -13,7 +13,16 @@ if empty($HERDR_PANE_ID)
   finish
 endif
 
+" navigate.sh, if this file still sits next to it in a plugin checkout. Going
+" through it means crossing out of Vim behaves like crossing out of any other
+" pane (edge spillover and all). Copied somewhere else, we just move focus.
+let s:navigate = expand('<sfile>:p:h:h') . '/navigate.sh'
+
 function! s:HerdrFocus(dir) abort
+  if filereadable(s:navigate)
+    call system('bash ' . shellescape(s:navigate) . ' --no-detect ' . a:dir)
+    return
+  endif
   let l:herdr = empty($HERDR_BIN_PATH) ? 'herdr' : $HERDR_BIN_PATH
   " Target this pane explicitly: --current resolves to the server's globally
   " focused pane, which is not necessarily the Vim instance making the call.

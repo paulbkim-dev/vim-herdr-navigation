@@ -17,9 +17,11 @@ Two cooperating sides, like `vim-tmux-navigator`:
   into that pane with `herdr pane send-keys`; otherwise it moves herdr's focus
   with `herdr pane focus --direction`.
 - **editor side** (`editor/nvim.lua`, `editor/vim.vim`): maps the same keys to
-  `wincmd h/j/k/l`. If the window didn't change (Vim is at an edge), it calls
-  `herdr pane focus --direction` to cross into the neighbouring herdr pane. Vim
-  finds its own pane through the `$HERDR_PANE_ID` herdr injects into every pane.
+  `wincmd h/j/k/l`. If the window didn't change (Vim is at an edge), it crosses
+  into the neighbouring herdr pane — through `navigate.sh` when this file still
+  sits next to it in a checkout (so edge spillover, below, applies here too),
+  otherwise with a plain `herdr pane focus --direction`. Vim finds its own pane
+  through the `$HERDR_PANE_ID` herdr injects into every pane.
 
 ## Requirements
 
@@ -126,6 +128,23 @@ make build  # lint and validate the plugin manifest
 
   Unlike Vim, these apps don't cross _out_ at an edge — use `prefix+h/j/k/l` to
   leave the pane.
+- **Edge spillover** (opt-in). By default `Ctrl+h/j/k/l` stops at the edge of the
+  pane layout. Set `HERDR_NAV_SPILL=1` to have the motion carry on into the
+  neighbouring container instead, i3-style:
+
+  ```bash
+  export HERDR_NAV_SPILL=1
+  ```
+
+  `Ctrl+h`/`Ctrl+l` at the left/right edge move to the previous/next **tab** in
+  the workspace; `Ctrl+k`/`Ctrl+j` at the top/bottom edge move to the
+  previous/next **workspace**. Both wrap around, and focus then walks to the far
+  side of the layout you land in, so crossing rightwards puts you on the leftmost
+  pane and the whole thing reads as one continuous move. With a single tab (or a
+  single workspace) there is nowhere to go and the key does nothing, as before.
+
+  Set it where you launch herdr, so both herdr itself and the panes it starts see
+  it — the editor side reads it from the pane's environment.
 - **`Ctrl+l` / `Ctrl+k` in shells.** Binding these globally shadows readline's
   `Ctrl+L` (clear screen) and `Ctrl+K` (kill line) inside non-Vim panes. This is
   the same tradeoff as `vim-tmux-navigator`. If you want them back, bind clear to

@@ -11,6 +11,11 @@
 -- or source it from your config after plugins load:
 --   dofile("/path/to/vim-herdr-navigation/editor/nvim.lua")
 
+-- navigate.sh, if this file still sits next to it in a plugin checkout. Going
+-- through it means crossing out of Neovim behaves like crossing out of any other
+-- pane (edge spillover and all). Copied elsewhere, we just move focus.
+local navigate = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h") .. "/navigate.sh"
+
 local function nav(wincmd, dir)
   local prev = vim.api.nvim_get_current_win()
   vim.cmd("wincmd " .. wincmd)
@@ -19,6 +24,10 @@ local function nav(wincmd, dir)
   end
   -- At a split edge: cross into the surrounding multiplexer.
   if vim.env.HERDR_PANE_ID and vim.env.HERDR_PANE_ID ~= "" then
+    if vim.fn.filereadable(navigate) == 1 then
+      vim.fn.system({ "bash", navigate, "--no-detect", dir })
+      return
+    end
     local herdr = vim.env.HERDR_BIN_PATH
     if herdr == nil or herdr == "" then
       herdr = "herdr"
