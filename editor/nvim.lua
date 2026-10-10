@@ -5,6 +5,10 @@
 -- into the neighbouring herdr pane. When not inside herdr it falls back to tmux
 -- (if any) or plain wincmd, so a tmux setup keeps working.
 --
+-- <C-h/j/k/l> is only the default: g:herdr_nav_keys swaps any direction's key,
+-- and g:herdr_nav_no_mappings plus the <Plug>(HerdrNavigate*) mappings allow
+-- any binding at all. See the mapping section at the bottom.
+--
 -- Load it so it wins over other <C-h/j/k/l> mappings (e.g. vim-tmux-navigator).
 -- The simplest reliable way is to drop it in your config's after/plugin dir:
 --   cp editor/nvim.lua ~/.config/nvim/after/plugin/herdr_nav.lua
@@ -32,13 +36,39 @@ local function nav(wincmd, dir)
   end
 end
 
-local function map(lhs, wincmd, dir, desc)
+-- <Plug> mappings, one per direction, so any key can drive the navigation.
+local plug = {
+  left = "<Plug>(HerdrNavigateLeft)",
+  down = "<Plug>(HerdrNavigateDown)",
+  up = "<Plug>(HerdrNavigateUp)",
+  right = "<Plug>(HerdrNavigateRight)",
+}
+local wincmds = { left = "h", down = "j", up = "k", right = "l" }
+for dir, lhs in pairs(plug) do
   vim.keymap.set("n", lhs, function()
-    nav(wincmd, dir)
-  end, { silent = true, noremap = true, desc = desc })
+    nav(wincmds[dir], dir)
+  end, { silent = true, desc = "Navigate " .. dir .. " (vim/herdr)" })
 end
 
-map("<C-h>", "h", "left", "Navigate left (vim/herdr)")
-map("<C-j>", "j", "down", "Navigate down (vim/herdr)")
-map("<C-k>", "k", "up", "Navigate up (vim/herdr)")
-map("<C-l>", "l", "right", "Navigate right (vim/herdr)")
+-- Default keys: <C-h/j/k/l>. Two ways to change them (set before this file
+-- loads), both mirrored on the herdr side by HERDR_NAV_KEY_LEFT/DOWN/UP/RIGHT
+-- (see "Custom keys" in the README):
+--   vim.g.herdr_nav_keys       replace any subset of the defaults, e.g.
+--                              { left = "<C-Left>", right = "<C-Right>" };
+--                              an empty string drops that direction
+--   vim.g.herdr_nav_no_mappings = 1
+--                              define no keys at all; bind the <Plug>
+--                              mappings above yourself
+if vim.g.herdr_nav_no_mappings ~= 1 then
+  local keys = vim.tbl_extend("force", {
+    left = "<C-h>",
+    down = "<C-j>",
+    up = "<C-k>",
+    right = "<C-l>",
+  }, vim.g.herdr_nav_keys or {})
+  for dir, lhs in pairs(keys) do
+    if plug[dir] and lhs ~= "" then
+      vim.keymap.set("n", lhs, plug[dir], { silent = true, remap = true })
+    end
+  end
+end

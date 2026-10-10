@@ -2,10 +2,11 @@
 
 Navigate [herdr](https://herdr.dev) panes and Vim/Neovim splits as if they were
 one app. `Ctrl+h/j/k/l` moves between Vim splits while you're in Vim, and falls
-through to move between herdr panes when Vim hits an edge — and the same keys
-move between herdr panes everywhere else. It's
+through to move between herdr panes when Vim hits an edge. The same keys move
+between herdr panes everywhere else. It's
 [`vim-tmux-navigator`](https://github.com/christoomey/vim-tmux-navigator),
-ported to herdr's CLI.
+ported to herdr's CLI. `Ctrl+h/j/k/l` is only the default — any chords work,
+see [Custom keys](#custom-keys).
 
 ## How it works
 
@@ -112,6 +113,60 @@ make lint   # shellcheck and Lua syntax checks
 make build  # lint and validate the plugin manifest
 ```
 
+## Custom keys
+
+`Ctrl+h/j/k/l` is only the default. Any chord herdr and your terminal can
+deliver works. Three places must agree, one per hop:
+
+1. **The herdr keybinds** — the `key = "..."` values in the `[[keys.command]]`
+   entries above. This is what you physically press.
+2. **The forwarded keys** — what `navigate.sh` sends into a Vim pane. Each
+   direction has an env override, read where herdr runs; the defaults are the
+   matching `ctrl+h/j/k/l`:
+   `HERDR_NAV_KEY_LEFT`, `HERDR_NAV_KEY_DOWN`, `HERDR_NAV_KEY_UP`,
+   `HERDR_NAV_KEY_RIGHT`.
+3. **The editor maps** — set `g:herdr_nav_keys` before the editor file loads
+   to replace any subset of the defaults (an empty string drops that
+   direction). Or set `g:herdr_nav_no_mappings = 1` and bind the
+   `<Plug>(HerdrNavigateLeft/Down/Up/Right)` mappings yourself.
+
+Example — `Ctrl+arrow` navigation, which leaves `Ctrl+h/j/k/l` free for the
+editor's own defaults (like `Ctrl+l` clear-and-redraw):
+
+In `~/.config/herdr/config.toml`, bind the arrows to the plugin actions:
+
+```toml
+[[keys.command]]
+key = "ctrl+left"
+type = "plugin_action"
+command = "vim-herdr-navigation.left"
+
+# ...same for ctrl+down / ctrl+up / ctrl+right...
+```
+
+Where you launch herdr, forward the same chords:
+
+```bash
+export HERDR_NAV_KEY_LEFT='ctrl+left'
+export HERDR_NAV_KEY_DOWN='ctrl+down'
+export HERDR_NAV_KEY_UP='ctrl+up'
+export HERDR_NAV_KEY_RIGHT='ctrl+right'
+```
+
+Neovim, before `editor/nvim.lua` loads:
+
+```lua
+vim.g.herdr_nav_keys =
+  { left = "<C-Left>", down = "<C-Down>", up = "<C-Up>", right = "<C-Right>" }
+```
+
+Vim, before `editor/vim.vim` is sourced:
+
+```vim
+let g:herdr_nav_keys =
+      \ {'left': '<C-Left>', 'down': '<C-Down>', 'up': '<C-Up>', 'right': '<C-Right>'}
+```
+
 ## Notes & tradeoffs
 
 - **Other TUIs that use `Ctrl+h/j/k/l`** ([vi-sql](https://github.com/kopecmaciej/vi-sql),
@@ -129,7 +184,8 @@ make build  # lint and validate the plugin manifest
 - **`Ctrl+l` / `Ctrl+k` in shells.** Binding these globally shadows readline's
   `Ctrl+L` (clear screen) and `Ctrl+K` (kill line) inside non-Vim panes. This is
   the same tradeoff as `vim-tmux-navigator`. If you want them back, bind clear to
-  something like `prefix+l` or pick `alt+h/j/k/l` for navigation instead.
+  something like `prefix+l`, or navigate with different chords entirely — see
+  [Custom keys](#custom-keys).
 - **`Ctrl+H` vs Backspace.** `Ctrl+H` and Backspace share a byte (`0x08`) unless
   the kitty keyboard protocol is active. Neovim ≥ 0.10 enables it automatically
   in herdr panes, keeping `<C-h>` distinct. On older Vim you may need to map
