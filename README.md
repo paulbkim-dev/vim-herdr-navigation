@@ -20,6 +20,10 @@ Two cooperating sides, like `vim-tmux-navigator`:
   `wincmd h/j/k/l`. If the window didn't change (Vim is at an edge), it calls
   `herdr pane focus --direction` to cross into the neighbouring herdr pane. Vim
   finds its own pane through the `$HERDR_PANE_ID` herdr injects into every pane.
+  Inside the Herdr desktop app, whose terminals carry `$HC_TERMINAL_ID`
+  instead, it crosses with `herdr-app do pane.go --direction`, which moves from
+  the app's focused pane. The app side needs its own `Ctrl+h/j/k/l` binding
+  that forwards the key to Vim; `navigate.sh` covers only the herdr TUI.
 
 ## Requirements
 

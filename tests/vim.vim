@@ -23,8 +23,10 @@ execute 'call ' . s:script . "Navigate('l', 'right')"
 call assert_true(filereadable(s:log), 'edge navigation must call Herdr')
 let s:lines = readfile(s:log)
 call assert_equal(1, len(s:lines), 'edge navigation must make one Herdr call')
+let s:expected = empty($HERDR_NAV_TEST_EXPECT)
+      \ ? 'pane focus --direction right --pane w-test:p1' : $HERDR_NAV_TEST_EXPECT
 call assert_equal(
-      \ 'pane focus --direction right --pane w-test:p1',
+      \ s:expected,
       \ s:lines[0],
       \ 'Vim must target its invoking Herdr pane')
 
