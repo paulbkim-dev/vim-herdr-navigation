@@ -7,13 +7,18 @@
 " Load it from your vimrc, e.g.:
 "   source /path/to/vim-herdr-navigation/editor/vim.vim
 "
-" Only active inside a herdr pane (guards on $HERDR_PANE_ID).
+" Only active inside a herdr pane: $HERDR_PANE_ID in the herdr TUI, or
+" $HC_TERMINAL_ID in the Herdr desktop app.
 
-if empty($HERDR_PANE_ID)
+if empty($HERDR_PANE_ID) && empty($HC_TERMINAL_ID)
   finish
 endif
 
 function! s:HerdrFocus(dir) abort
+  if empty($HERDR_PANE_ID)
+    call system('herdr-app do pane.go --direction ' . shellescape(a:dir))
+    return
+  endif
   let l:herdr = empty($HERDR_BIN_PATH) ? 'herdr' : $HERDR_BIN_PATH
   " Target this pane explicitly: --current resolves to the server's globally
   " focused pane, which is not necessarily the Vim instance making the call.

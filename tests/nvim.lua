@@ -30,9 +30,7 @@ callback("<C-l>")()
 assert(vim.fn.filereadable(log) == 1, "edge navigation must call Herdr")
 local lines = vim.fn.readfile(log)
 assert(#lines == 1, "edge navigation must make one Herdr call")
-assert(
-  lines[1] == "pane focus --direction right --pane w-test:p1",
-  "unexpected Herdr command: " .. lines[1]
-)
+local expected = vim.env.HERDR_NAV_TEST_EXPECT or "pane focus --direction right --pane w-test:p1"
+assert(lines[1] == expected, "unexpected Herdr command: " .. lines[1])
 
 print("Neovim navigation verification passed")

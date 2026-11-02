@@ -78,4 +78,20 @@ rm -f "$HERDR_NAV_TEST_LOG"
 env -u TMUX nvim --clean --headless -u NONE -S "$repo/tests/vim.vim"
 printf 'Vimscript navigation verification passed\n'
 
+# Inside the Herdr desktop app there is no HERDR_PANE_ID; the edge crossing goes
+# through `herdr-app do pane.go`, which acts on the app's focused pane.
+cat >"$tmp/bin/herdr-app" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$HERDR_NAV_TEST_LOG"
+EOF
+chmod +x "$tmp/bin/herdr-app"
+for editor in "-l $repo/tests/nvim.lua" "-S $repo/tests/vim.vim"; do
+  rm -f "$HERDR_NAV_TEST_LOG"
+  # shellcheck disable=SC2086
+  env -u TMUX -u HERDR_PANE_ID HC_TERMINAL_ID=t1 PATH="$tmp/bin:$PATH" \
+    HERDR_NAV_TEST_EXPECT='do pane.go --direction right' \
+    nvim --clean --headless -u NONE $editor
+done
+printf 'Herdr app navigation verification passed\n'
+
 printf 'Herdr navigation verification passed\n'

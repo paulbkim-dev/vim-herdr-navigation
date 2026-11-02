@@ -2,8 +2,9 @@
 --
 -- Seamless <C-h/j/k/l> navigation between Neovim splits and herdr panes: move
 -- between Neovim splits, and at a split edge hand off to herdr so focus crosses
--- into the neighbouring herdr pane. When not inside herdr it falls back to tmux
--- (if any) or plain wincmd, so a tmux setup keeps working.
+-- into the neighbouring herdr pane, in the herdr TUI or the Herdr desktop app.
+-- When not inside herdr it falls back to tmux (if any) or plain wincmd, so a
+-- tmux setup keeps working.
 --
 -- Load it so it wins over other <C-h/j/k/l> mappings (e.g. vim-tmux-navigator).
 -- The simplest reliable way is to drop it in your config's after/plugin dir:
@@ -26,6 +27,8 @@ local function nav(wincmd, dir)
     -- Target this pane explicitly: `--current` resolves to the server's
     -- globally focused pane, which is not necessarily the one we are in.
     vim.fn.system({ herdr, "pane", "focus", "--direction", dir, "--pane", vim.env.HERDR_PANE_ID })
+  elseif vim.env.HC_TERMINAL_ID and vim.env.HC_TERMINAL_ID ~= "" then
+    vim.fn.system({ "herdr-app", "do", "pane.go", "--direction", dir })
   elseif vim.env.TMUX and vim.env.TMUX ~= "" then
     local tmux = { left = "Left", down = "Down", up = "Up", right = "Right" }
     pcall(vim.cmd, "TmuxNavigate" .. tmux[dir])
