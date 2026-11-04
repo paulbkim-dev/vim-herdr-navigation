@@ -30,11 +30,16 @@ if [ -z "$herdr" ]; then
 fi
 pane="${HERDR_PANE_ID:-}"
 
+# Key forwarded into a Vim pane, one per direction. The defaults match the
+# editor side's default <C-h/j/k/l> maps. To navigate with different chords,
+# override any of these where you launch herdr, and set the editor side's
+# g:herdr_nav_keys to match (see "Custom keys" in the README):
+#   export HERDR_NAV_KEY_LEFT='ctrl+left'
 case "$dir" in
-  left)  key="ctrl+h" ;;
-  down)  key="ctrl+j" ;;
-  up)    key="ctrl+k" ;;
-  right) key="ctrl+l" ;;
+  left)  key="${HERDR_NAV_KEY_LEFT:-ctrl+h}" ;;
+  down)  key="${HERDR_NAV_KEY_DOWN:-ctrl+j}" ;;
+  up)    key="${HERDR_NAV_KEY_UP:-ctrl+k}" ;;
+  right) key="${HERDR_NAV_KEY_RIGHT:-ctrl+l}" ;;
   *) echo "navigate.sh: unknown direction: $dir" >&2; exit 2 ;;
 esac
 
